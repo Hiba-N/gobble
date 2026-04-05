@@ -1,5 +1,5 @@
 // ----------------------------
-// Gobble - ChatGPT Text Water Tracker
+// Gobble - ChatGPT Text Water Tracker (per-session, no images)
 // ----------------------------
 
 // CONFIG
@@ -7,21 +7,30 @@ const KW_PER_100_WORDS = 0.14; // kWh per 100 words
 const WATER_PER_KWH = 1.8;     // liters per kWh
 
 // STATE
-let waterBySession = {};       // track water per session
+let waterBySession = {};       // water per session
 let floatingBadge;
-let currentSessionId = null;   // track current chat session
+let currentSessionId = null;   // current chat session
 
 // ----------------------------
 // UTILITIES
-// ----------------------------
 function updateSession() {
   const sessionId = window.location.pathname;
+
   if (sessionId !== currentSessionId) {
     currentSessionId = sessionId;
-    // Initialize water for this session
-    if (!waterBySession[currentSessionId]) waterBySession[currentSessionId] = 0;
+
+    // initialize session water
+    waterBySession[currentSessionId] = 0;
     updateFloatingBadge(currentSessionId);
+
+    // reset all message tracking for this session
+    const messages = document.querySelectorAll("[data-message-author-role]");
+    messages.forEach(msg => {
+      msg.dataset.gobbleObserved = "false";
+      msg.dataset.gobbleWater = "0";
+    });
   }
+
   return currentSessionId;
 }
 
@@ -39,7 +48,6 @@ function addWater(sessionId, amount) {
 
 // ----------------------------
 // FLOATING BADGE
-// ----------------------------
 function createFloatingBadge() {
   if (!floatingBadge) {
     floatingBadge = document.createElement("div");
@@ -65,8 +73,7 @@ function updateFloatingBadge(sessionId) {
 }
 
 // ----------------------------
-// MESSAGE TRACKING (text only, streaming)
-// ----------------------------
+// MESSAGE TRACKING (text-only, streaming)
 function processMessage(msg, sessionId) {
   const text = msg.innerText || "";
   const newWater = estimateTextWater(text);
@@ -81,20 +88,20 @@ function processMessage(msg, sessionId) {
 }
 
 function trackMessages() {
-  const sessionId = updateSession(); // ensure new chat resets badge
-  const messages = document.querySelectorAll("[data-message-author-role]");
+  const sessionId = updateSession();
 
+  const messages = document.querySelectorAll("[data-message-author-role]");
   messages.forEach(msg => {
-    if (!msg.dataset.gobbleObserved) {
+    if (msg.dataset.gobbleObserved !== "true") {
       msg.dataset.gobbleObserved = "true";
 
-      // Observe streaming text updates
-      const innerObserver = new MutationObserver(() => {
+      // watch for streaming updates
+      const observer = new MutationObserver(() => {
         processMessage(msg, sessionId);
       });
-      innerObserver.observe(msg, { childList: true, subtree: true });
+      observer.observe(msg, { childList: true, subtree: true });
 
-      // Initial processing
+      // initial processing
       processMessage(msg, sessionId);
     }
   });
@@ -102,18 +109,16 @@ function trackMessages() {
 
 // ----------------------------
 // OBSERVER
-// ----------------------------
 function startObserver() {
   const observer = new MutationObserver(trackMessages);
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // Initial run (for messages already on page)
+  // initial run for messages already loaded
   setTimeout(trackMessages, 2000);
 }
 
 // ----------------------------
 // INIT
-// ----------------------------
 function initGobble() {
   createFloatingBadge();
   startObserver();
