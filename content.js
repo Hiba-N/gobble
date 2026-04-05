@@ -1,5 +1,5 @@
 // ----------------------------
-// Gobble - ChatGPT Water Tracker (final version)
+// Gobble - ChatGPT Water Tracker (final version, new chat reset)
 // ----------------------------
 
 // CONFIG
@@ -8,14 +8,22 @@ const WATER_PER_KWH = 1.8;     // liters per kWh
 const IMAGE_WATER = 10;        // assume 10 ml per AI image
 
 // STATE
-let waterBySession = {};        // track water per session
+let waterBySession = {};       // track water per session
 let floatingBadge;
+let currentSessionId = null;   // track current chat session
 
 // ----------------------------
 // UTILITIES
 // ----------------------------
-function getSessionId() {
-  return window.location.pathname; // Use chat URL path as session ID
+function updateSession() {
+  const sessionId = window.location.pathname;
+  if (sessionId !== currentSessionId) {
+    currentSessionId = sessionId;
+    // Initialize water for this session
+    if (!waterBySession[currentSessionId]) waterBySession[currentSessionId] = 0;
+    updateFloatingBadge(currentSessionId);
+  }
+  return currentSessionId;
 }
 
 function estimateTextWater(text) {
@@ -61,7 +69,6 @@ function updateFloatingBadge(sessionId) {
 // MESSAGE TRACKING (with streaming)
 // ----------------------------
 function processMessage(msg, sessionId) {
-  // Calculate current water
   const text = msg.innerText || "";
   const imagesCount = msg.querySelectorAll("img").length;
   const newWater = estimateTextWater(text) + imagesCount * IMAGE_WATER;
@@ -76,14 +83,14 @@ function processMessage(msg, sessionId) {
 }
 
 function trackMessages() {
-  const sessionId = getSessionId();
+  const sessionId = updateSession(); // ensure new chat resets badge
   const messages = document.querySelectorAll("[data-message-author-role]");
 
   messages.forEach(msg => {
     if (!msg.dataset.gobbleObserved) {
       msg.dataset.gobbleObserved = "true";
 
-      // Observe this message for streaming updates
+      // Watch for streaming text / image updates
       const innerObserver = new MutationObserver(() => {
         processMessage(msg, sessionId);
       });
@@ -102,7 +109,7 @@ function startObserver() {
   const observer = new MutationObserver(trackMessages);
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // Initial run (in case messages already exist)
+  // Initial run (for messages already on page)
   setTimeout(trackMessages, 2000);
 }
 
@@ -114,7 +121,7 @@ function initGobble() {
   startObserver();
 }
 
-// Wait for page load
+// Start Gobble after page load
 window.addEventListener("load", () => {
   initGobble();
 });
