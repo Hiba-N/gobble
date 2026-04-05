@@ -3,8 +3,7 @@
 // ----------------------------
 
 // CONFIG
-const KW_PER_100_WORDS = 0.14; // kWh per 100 words
-const WATER_PER_KWH = 1.8;     // liters per kWh
+const WATER_PER_100_WORDS = 0.519; // liters per 100 words
 
 // STATE
 let waterBySession = {};       // water per session
@@ -36,8 +35,7 @@ function updateSession() {
 
 function estimateTextWater(text) {
   const words = text.split(/\s+/).filter(Boolean).length;
-  const kwh = (words / 100) * KW_PER_100_WORDS;
-  return kwh * WATER_PER_KWH;
+  return (words / 100) * WATER_PER_100_WORDS;
 }
 
 function addWater(sessionId, amount) {
@@ -53,7 +51,7 @@ function createFloatingBadge() {
     floatingBadge = document.createElement("div");
     floatingBadge.id = "gobble-floating";
     floatingBadge.style.position = "fixed";
-    floatingBadge.style.bottom = "10px";
+    floatingBadge.style.bottom = "10px";   // bottom-right
     floatingBadge.style.right = "10px";
     floatingBadge.style.padding = "5px 10px";
     floatingBadge.style.background = "#00aaff";
@@ -63,6 +61,10 @@ function createFloatingBadge() {
     floatingBadge.style.zIndex = "9999";
     floatingBadge.style.fontFamily = "Arial, sans-serif";
     floatingBadge.innerText = "💧 0 L";
+
+    // optional tooltip for transparency
+    floatingBadge.title = "Estimated water usage for GPT-4 text; actual use may vary";
+
     document.body.appendChild(floatingBadge);
   }
 }
