@@ -1,6 +1,6 @@
 # Gobble – ChatGPT Text Generation Water Usage Tracker
 
-Gobble is a lightweight **Chrome extension** that tracks the estimated **water usage of ChatGPT text** per chat session. It adds a small floating badge to the top-right corner of your browser window, showing how much water (in liters) has been “used” for the words you’ve generated in each chat.  
+Gobble is a lightweight **Chrome extension** that tracks the estimated **water usage of ChatGPT text** per chat session. It adds a small floating badge to the bottom-right corner of your browser window, showing how much water (in liters) has been “used” for the words you’ve generated in each chat.  
 
 > **Note:** This version only counts text messages. AI-generated images are **not included** in the calculation. Gobble provides an estimate of water usage rather than an exact measurement. Its purpose is not to audit real consumption but to give users a tangible sense of the environmental cost of AI-generated text. Watching the number rise as you chat can instill a small awareness—and maybe a tiny bit of guilt—about the hidden resources behind each word.
 
@@ -9,18 +9,18 @@ Gobble is a lightweight **Chrome extension** that tracks the estimated **water u
 Training and running large language models like ChatGPT consumes **significant amounts of electricity**, which in turn requires water for power generation and cooling. For example:  
 
 - Training GPT models and serving queries uses energy from data centers, often cooled with water-intensive methods.  
-- Estimates suggest **0.14 kWh per 100 words** of text generation for large models, which translates into water use when considering cooling and energy sources.  
+- Estimates suggest **519 ml per 100 words** of text generation for GPT-4, which translates into water use when considering cooling and energy sources.  
 
 **Reference for water-energy conversion:**  
-- [Masanet et al., 2020, “Recalibrating global data center energy-use estimates”](https://www.nature.com/articles/s41893-020-00646-8)  
-- Conversion factor used in Gobble: **1.8 liters per kWh** (standard estimate for water use per kWh from thermoelectric power generation).
+- [A bottle of water per email: the hidden environmental costs of using AI chatbots](https://www.washingtonpost.com/technology/2024/09/18/energy-ai-use-electricity-water-data-centers/)  
+- Conversion factor used in Gobble: **519 ml per 100 words** 
 
 ## Features
 
 - Tracks water usage **per chat session**.  
 - Automatically resets the counter when switching to a new chat.  
 - Updates in real-time while ChatGPT messages stream.  
-- Minimal, non-intrusive floating badge in the top-right corner.
+- Minimal, non-intrusive floating badge in the bottom-right corner.
 
 ---
 
@@ -48,7 +48,7 @@ git clone https://github.com/yourusername/gobble.git
 ```
 
 2. Open Chrome and navigate to: chrome://extensions/
-3. Enable Developer Mode (toggle in the top-right corner).
+3. Enable Developer Mode (toggle in the bottom-right corner).
 4. Click “Load unpacked” and select the Gobble folder containing manifest.json.
 5. Once loaded, you should see Gobble in your extensions list.
 
@@ -57,7 +57,7 @@ Usage
 Open ChatGPT
 .
 Start a new chat or continue an existing one.
-Look at the floating badge in the top-right corner. It will show the estimated water usage in liters.
+Look at the floating badge in the bottom-right corner. It will show the estimated water usage in liters.
 When you open a new chat session, the badge resets automatically.
 
 ⚠️ Important:
