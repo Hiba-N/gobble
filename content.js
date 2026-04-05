@@ -1,11 +1,10 @@
 // ----------------------------
-// Gobble - ChatGPT Water Tracker (final version, new chat reset)
+// Gobble - ChatGPT Text Water Tracker
 // ----------------------------
 
 // CONFIG
 const KW_PER_100_WORDS = 0.14; // kWh per 100 words
 const WATER_PER_KWH = 1.8;     // liters per kWh
-const IMAGE_WATER = 10;        // assume 10 ml per AI image
 
 // STATE
 let waterBySession = {};       // track water per session
@@ -66,12 +65,11 @@ function updateFloatingBadge(sessionId) {
 }
 
 // ----------------------------
-// MESSAGE TRACKING (with streaming)
+// MESSAGE TRACKING (text only, streaming)
 // ----------------------------
 function processMessage(msg, sessionId) {
   const text = msg.innerText || "";
-  const imagesCount = msg.querySelectorAll("img").length;
-  const newWater = estimateTextWater(text) + imagesCount * IMAGE_WATER;
+  const newWater = estimateTextWater(text);
 
   const oldWater = parseFloat(msg.dataset.gobbleWater || "0");
   const delta = newWater - oldWater;
@@ -90,7 +88,7 @@ function trackMessages() {
     if (!msg.dataset.gobbleObserved) {
       msg.dataset.gobbleObserved = "true";
 
-      // Watch for streaming text / image updates
+      // Observe streaming text updates
       const innerObserver = new MutationObserver(() => {
         processMessage(msg, sessionId);
       });
@@ -122,6 +120,4 @@ function initGobble() {
 }
 
 // Start Gobble after page load
-window.addEventListener("load", () => {
-  initGobble();
-});
+window.addEventListener("load", initGobble);
