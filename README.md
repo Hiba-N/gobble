@@ -9,7 +9,7 @@ Gobble is a lightweight **Chrome extension** that tracks the estimated **water u
 Training and running large language models like ChatGPT consumes **significant amounts of electricity**, which in turn requires water for power generation and cooling. For example:  
 
 - Training GPT models and serving queries uses energy from data centers, often cooled with water-intensive methods.  
-- Estimates suggest **519 ml per 100 words** of text generation for GPT-4, which translates into water use when considering cooling and energy sources.  
+- Estimates suggest **519 ml per 100 words** of text generation for GPT-4, when considering cooling and energy sources.  
 
 **Reference for water-energy conversion:**  
 - [A bottle of water per email: the hidden environmental costs of using AI chatbots](https://www.washingtonpost.com/technology/2024/09/18/energy-ai-use-electricity-water-data-centers/)  
