@@ -53,7 +53,7 @@ function createFloatingBadge() {
     floatingBadge = document.createElement("div");
     floatingBadge.id = "gobble-floating";
     floatingBadge.style.position = "fixed";
-    floatingBadge.style.top = "10px";
+    floatingBadge.style.bottom = "10px";
     floatingBadge.style.right = "10px";
     floatingBadge.style.padding = "5px 10px";
     floatingBadge.style.background = "#00aaff";
