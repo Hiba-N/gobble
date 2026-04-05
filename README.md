@@ -2,7 +2,9 @@
 
 Gobble is a lightweight **Chrome extension** that tracks the estimated **water usage of ChatGPT text** per chat session. It adds a small floating badge to the bottom-right corner of your browser window, showing how much water (in liters) has been “used” for the words you’ve generated in each chat.  
 
-> **Note:** This version only counts text messages. AI-generated images are **not included** in the calculation. Gobble provides an estimate of water usage rather than an exact measurement. Its purpose is not to audit real consumption but to give users a tangible sense of the environmental cost of AI-generated text. Watching the number rise as you chat can instill a small awareness, and maybe a tiny bit of guilt, about the hidden resources behind each word.
+This version only counts text messages. AI-generated images are **not included** in the calculation. Gobble provides an estimate of water usage rather than an exact measurement. Its purpose is not to audit real consumption but to give users a tangible sense of the environmental cost of AI-generated text. Watching the number rise as you chat can instill a small awareness, and maybe a tiny bit of guilt, about the hidden resources behind each word.
+
+> **Note for Hackathon:** AI was used in the general structuring and logic writing of the code.
 
 ## AI and Water Usage
 
