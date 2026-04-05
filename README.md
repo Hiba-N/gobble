@@ -65,13 +65,4 @@ When you open a new chat session, the badge resets automatically.
 If ChatGPT is already open when you install Gobble, you may need to refresh the ChatGPT tab for the extension to start tracking.
 Only text messages are counted. Any AI-generated images are not included.
 
-### Development
-
-If you want to tweak Gobble:
-
-Edit content.js for tracking logic or badge style.
-After changes, go to chrome://extensions/ → click “Reload” for the Gobble extension.
-Refresh your ChatGPT tab to see updates.
-Contributing
-
 
