@@ -1,31 +1,38 @@
 // ----------------------------
-// Gobble - ChatGPT Water Tracker (final version, new chat reset)
+// Gobble - Improved Tracker
 // ----------------------------
 
 // CONFIG
-const KW_PER_100_WORDS = 0.14; // kWh per 100 words
-const WATER_PER_KWH = 1.8;     // liters per kWh
-const IMAGE_WATER = 10;        // assume 10 ml per AI image
+const KW_PER_100_WORDS = 0.14;
+const WATER_PER_KWH = 1.8;
+const IMAGE_WATER = 0.01; // 10 ml = 0.01 L
 
 // STATE
-let waterBySession = {};       // track water per session
+let waterBySession = {};
 let floatingBadge;
-let currentSessionId = null;   // track current chat session
+let currentSessionId = null;
+
+// NEW: track counted images
+const countedImages = new Set();
 
 // ----------------------------
-// UTILITIES
+// SESSION
 // ----------------------------
 function updateSession() {
   const sessionId = window.location.pathname;
   if (sessionId !== currentSessionId) {
     currentSessionId = sessionId;
-    // Initialize water for this session
-    if (!waterBySession[currentSessionId]) waterBySession[currentSessionId] = 0;
-    updateFloatingBadge(currentSessionId);
+    if (!waterBySession[currentSessionId]) {
+      waterBySession[currentSessionId] = 0;
+    }
+    updateFloatingBadge(sessionId);
   }
   return currentSessionId;
 }
 
+// ----------------------------
+// WATER CALC
+// ----------------------------
 function estimateTextWater(text) {
   const words = text.split(/\s+/).filter(Boolean).length;
   const kwh = (words / 100) * KW_PER_100_WORDS;
@@ -39,39 +46,36 @@ function addWater(sessionId, amount) {
 }
 
 // ----------------------------
-// FLOATING BADGE
+// BADGE
 // ----------------------------
 function createFloatingBadge() {
   if (!floatingBadge) {
     floatingBadge = document.createElement("div");
-    floatingBadge.id = "gobble-floating";
     floatingBadge.style.position = "fixed";
     floatingBadge.style.top = "10px";
     floatingBadge.style.right = "10px";
-    floatingBadge.style.padding = "5px 10px";
+    floatingBadge.style.padding = "6px 12px";
     floatingBadge.style.background = "#00aaff";
     floatingBadge.style.color = "#fff";
     floatingBadge.style.fontWeight = "bold";
-    floatingBadge.style.borderRadius = "5px";
+    floatingBadge.style.borderRadius = "6px";
     floatingBadge.style.zIndex = "9999";
-    floatingBadge.style.fontFamily = "Arial, sans-serif";
-    floatingBadge.innerText = "💧 0 L";
+    floatingBadge.innerText = "💧 0.00 L";
     document.body.appendChild(floatingBadge);
   }
 }
 
 function updateFloatingBadge(sessionId) {
   if (!floatingBadge) createFloatingBadge();
-  floatingBadge.innerText = `💧 ${waterBySession[sessionId]?.toFixed(2) || 0} L`;
+  floatingBadge.innerText = `💧 ${waterBySession[sessionId]?.toFixed(2) || "0.00"} L`;
 }
 
 // ----------------------------
-// MESSAGE TRACKING (with streaming)
+// TEXT TRACKING (unchanged core idea)
 // ----------------------------
 function processMessage(msg, sessionId) {
   const text = msg.innerText || "";
-  const imagesCount = msg.querySelectorAll("img").length;
-  const newWater = estimateTextWater(text) + imagesCount * IMAGE_WATER;
+  const newWater = estimateTextWater(text);
 
   const oldWater = parseFloat(msg.dataset.gobbleWater || "0");
   const delta = newWater - oldWater;
@@ -83,34 +87,68 @@ function processMessage(msg, sessionId) {
 }
 
 function trackMessages() {
-  const sessionId = updateSession(); // ensure new chat resets badge
+  const sessionId = updateSession();
   const messages = document.querySelectorAll("[data-message-author-role]");
 
   messages.forEach(msg => {
     if (!msg.dataset.gobbleObserved) {
       msg.dataset.gobbleObserved = "true";
 
-      // Watch for streaming text / image updates
-      const innerObserver = new MutationObserver(() => {
+      const observer = new MutationObserver(() => {
         processMessage(msg, sessionId);
       });
-      innerObserver.observe(msg, { childList: true, subtree: true });
 
-      // Initial processing
+      observer.observe(msg, { childList: true, subtree: true });
+
       processMessage(msg, sessionId);
     }
   });
 }
 
 // ----------------------------
-// OBSERVER
+// IMAGE TRACKING (NEW + FIXED)
+// ----------------------------
+function trackImages() {
+  const sessionId = updateSession();
+  const images = document.querySelectorAll("img");
+
+  images.forEach(img => {
+    if (!countedImages.has(img)) {
+      countedImages.add(img);
+      addWater(sessionId, IMAGE_WATER);
+    }
+  });
+}
+
+// Observe new images globally
+function startImageObserver() {
+  const observer = new MutationObserver(() => {
+    trackImages();
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  // initial scan
+  setTimeout(trackImages, 1500);
+}
+
+// ----------------------------
+// MAIN OBSERVER
 // ----------------------------
 function startObserver() {
-  const observer = new MutationObserver(trackMessages);
-  observer.observe(document.body, { childList: true, subtree: true });
+  const observer = new MutationObserver(() => {
+    trackMessages();
+  });
 
-  // Initial run (for messages already on page)
-  setTimeout(trackMessages, 2000);
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  setTimeout(trackMessages, 1500);
 }
 
 // ----------------------------
@@ -119,9 +157,7 @@ function startObserver() {
 function initGobble() {
   createFloatingBadge();
   startObserver();
+  startImageObserver(); // 🔥 key addition
 }
 
-// Start Gobble after page load
-window.addEventListener("load", () => {
-  initGobble();
-});
+window.addEventListener("load", initGobble);
