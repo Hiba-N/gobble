@@ -29,7 +29,7 @@ Training and running large language models like ChatGPT consumes **significant a
 1. For each message sent by ChatGPT, Gobble counts the number of words.  
 2. Uses the following calculation:
 
-0.14 kWh per 100 words × 1.8 liters/kWh = water per message in liters
+519 ml per 100 words
 
 
 3. Floating badge updates live as the session progresses.  
