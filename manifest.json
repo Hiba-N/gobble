@@ -4,10 +4,18 @@
   "version": "1.0",
   "description": "Tracks ChatGPT water usage per session",
   "permissions": ["storage", "tabs"],
-  "host_permissions": ["https://chat.openai.com/*"],
+  "host_permissions": [
+    "https://chat.openai.com/*",
+    "https://chatgpt.com/*",
+    "https://www.chatgpt.com/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://chat.openai.com/*"],
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*",
+        "https://www.chatgpt.com/*"
+      ],
       "js": ["content.js"],
       "css": ["style.css"]
     }

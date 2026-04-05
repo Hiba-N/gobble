@@ -1,76 +1,120 @@
-// Gobble content script
+// ----------------------------
+// Gobble - ChatGPT Water Tracker (final version)
+// ----------------------------
 
-// Configurable constants
-const KW_PER_100_WORDS = 0.14;  // kWh per 100 words
-const WATER_PER_KWH = 1.8;      // liters per kWh
-const IMAGE_WATER = 10;         // assume 10 ml per AI image
+// CONFIG
+const KW_PER_100_WORDS = 0.14; // kWh per 100 words
+const WATER_PER_KWH = 1.8;     // liters per kWh
+const IMAGE_WATER = 10;        // assume 10 ml per AI image
 
-// Store total water per session
-let waterBySession = {};
+// STATE
+let waterBySession = {};        // track water per session
+let floatingBadge;
 
-// Utility: estimate water for text
+// ----------------------------
+// UTILITIES
+// ----------------------------
+function getSessionId() {
+  return window.location.pathname; // Use chat URL path as session ID
+}
+
 function estimateTextWater(text) {
   const words = text.split(/\s+/).filter(Boolean).length;
   const kwh = (words / 100) * KW_PER_100_WORDS;
   return kwh * WATER_PER_KWH;
 }
 
-// Utility: add water usage for session
 function addWater(sessionId, amount) {
   if (!waterBySession[sessionId]) waterBySession[sessionId] = 0;
   waterBySession[sessionId] += amount;
+  updateFloatingBadge(sessionId);
 }
 
-// Detect ChatGPT session ID from URL
-function getSessionId() {
-  return window.location.pathname;
+// ----------------------------
+// FLOATING BADGE
+// ----------------------------
+function createFloatingBadge() {
+  if (!floatingBadge) {
+    floatingBadge = document.createElement("div");
+    floatingBadge.id = "gobble-floating";
+    floatingBadge.style.position = "fixed";
+    floatingBadge.style.top = "10px";
+    floatingBadge.style.right = "10px";
+    floatingBadge.style.padding = "5px 10px";
+    floatingBadge.style.background = "#00aaff";
+    floatingBadge.style.color = "#fff";
+    floatingBadge.style.fontWeight = "bold";
+    floatingBadge.style.borderRadius = "5px";
+    floatingBadge.style.zIndex = "9999";
+    floatingBadge.style.fontFamily = "Arial, sans-serif";
+    floatingBadge.innerText = "💧 0 L";
+    document.body.appendChild(floatingBadge);
+  }
 }
 
-// Annotate sidebar chats with water usage
-function annotateSidebar() {
-  const chats = document.querySelectorAll("nav a");
-
-  chats.forEach(chat => {
-    const href = chat.getAttribute("href");
-    const sessionWater = waterBySession[href] || 0;
-
-    if (!chat.querySelector(".water-badge")) {
-      const badge = document.createElement("span");
-      badge.className = "water-badge";
-      badge.innerText = `💧 ${sessionWater.toFixed(2)} L`;
-      chat.appendChild(badge);
-    } else {
-      chat.querySelector(".water-badge").innerText = `💧 ${sessionWater.toFixed(2)} L`;
-    }
-  });
+function updateFloatingBadge(sessionId) {
+  if (!floatingBadge) createFloatingBadge();
+  floatingBadge.innerText = `💧 ${waterBySession[sessionId]?.toFixed(2) || 0} L`;
 }
 
-// Track messages (text + images)
+// ----------------------------
+// MESSAGE TRACKING (with streaming)
+// ----------------------------
+function processMessage(msg, sessionId) {
+  // Calculate current water
+  const text = msg.innerText || "";
+  const imagesCount = msg.querySelectorAll("img").length;
+  const newWater = estimateTextWater(text) + imagesCount * IMAGE_WATER;
+
+  const oldWater = parseFloat(msg.dataset.gobbleWater || "0");
+  const delta = newWater - oldWater;
+
+  if (delta > 0) {
+    addWater(sessionId, delta);
+    msg.dataset.gobbleWater = newWater;
+  }
+}
+
 function trackMessages() {
   const sessionId = getSessionId();
   const messages = document.querySelectorAll("[data-message-author-role]");
 
   messages.forEach(msg => {
-    if (!msg.dataset.gobbleProcessed) {
-      msg.dataset.gobbleProcessed = "true";
+    if (!msg.dataset.gobbleObserved) {
+      msg.dataset.gobbleObserved = "true";
 
-      // Text messages
-      const text = msg.innerText || "";
-      const textWater = estimateTextWater(text);
-      addWater(sessionId, textWater);
+      // Observe this message for streaming updates
+      const innerObserver = new MutationObserver(() => {
+        processMessage(msg, sessionId);
+      });
+      innerObserver.observe(msg, { childList: true, subtree: true });
 
-      // Images in message (assume AI)
-      const imgs = msg.querySelectorAll("img");
-      imgs.forEach(() => addWater(sessionId, IMAGE_WATER));
+      // Initial processing
+      processMessage(msg, sessionId);
     }
   });
-
-  annotateSidebar();
 }
 
-// Observe page for new messages
-const observer = new MutationObserver(trackMessages);
-observer.observe(document.body, { childList: true, subtree: true });
+// ----------------------------
+// OBSERVER
+// ----------------------------
+function startObserver() {
+  const observer = new MutationObserver(trackMessages);
+  observer.observe(document.body, { childList: true, subtree: true });
 
-// Initial run (for already loaded messages)
-setTimeout(trackMessages, 2000);
+  // Initial run (in case messages already exist)
+  setTimeout(trackMessages, 2000);
+}
+
+// ----------------------------
+// INIT
+// ----------------------------
+function initGobble() {
+  createFloatingBadge();
+  startObserver();
+}
+
+// Wait for page load
+window.addEventListener("load", () => {
+  initGobble();
+});
